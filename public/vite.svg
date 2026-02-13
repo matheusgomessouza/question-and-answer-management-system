@@ -1,10 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <rect width="128" height="128" rx="16" fill="url(#grad)"/>
-  <text x="64" y="80" font-size="64" font-weight="bold" fill="white" text-anchor="middle" font-family="Arial, sans-serif">Q&amp;A</text>
+<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg">
+ <defs>
+  <linearGradient spreadMethod="pad" y2="0.79767" x2="0.79297" y1="0.36407" x1="0.36719" id="svg_6">
+   <stop offset="0" stop-opacity="0.99219" stop-color="#1ca084"/>
+   <stop offset="1" stop-opacity="0.99609" stop-color="#da8b3c"/>
+  </linearGradient>
+ </defs>
+ <g>
+  <title>Layer 1</title>
+  <rect id="svg_1" fill="url(#svg_6)" rx="16" height="128" width="128"/>
+  <text id="svg_2" font-family="Arial, sans-serif" text-anchor="middle" fill="white" font-weight="bold" font-size="64" y="80" x="64">Q&amp;A</text>
+ </g>
 </svg>
