@@ -10,7 +10,7 @@ export function Navbar() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-accent-500 rounded-lg" />
+            <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-accent-500 rounded-lg text-white flex items-center justify-center font-bold">?</div>
             <h1 className="text-xl font-bold text-gray-800">Q&A Management</h1>
           </div>
 
