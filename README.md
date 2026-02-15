@@ -2,6 +2,8 @@
 
 Sistema de gerenciamento de perguntas e respostas construído com **React 18 + TypeScript + Vite** (frontend)
 
+![](./public/qams-dashboard.jpg)
+
 ## 🎯 Funcionalidades
 
 - ✅ CRUD completo de Respostas (Answers)
