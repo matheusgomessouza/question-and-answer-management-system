@@ -1,20 +1,16 @@
 import { Question } from '../types'
-import { Answer } from '../../answers/types'
 import { Button } from '@/shared/components/Button'
 import { Card } from '@/shared/components/Card'
 
 interface QuestionListProps {
   questions: Question[]
-  answers: Answer[]
   onEdit: (question: Question) => void
   onDelete: (id: string) => void
   isDeleting: boolean
 }
 
-export function QuestionList({ questions, answers, onEdit, onDelete, isDeleting }: QuestionListProps) {
+export function QuestionList({ questions, onEdit, onDelete, isDeleting }: QuestionListProps) {
   const sortedQuestions = [...questions].sort((a, b) => a.order - b.order)
-
-  const getAnswerById = (id: string) => answers.find(a => a.id === id)
 
   if (questions.length === 0) {
     return (
@@ -58,23 +54,20 @@ export function QuestionList({ questions, answers, onEdit, onDelete, isDeleting 
               </div>
             </div>
 
-            {question.answerIds.length > 0 && (
+            {question.answers.length > 0 && (
               <div className="border-t border-gray-200 pt-3">
                 <p className="text-sm font-medium text-gray-600 mb-2">
-                  Associated Answers ({question.answerIds.length}):
+                  Associated Answers ({question.answers.length}):
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {question.answerIds.map(answerId => {
-                    const answer = getAnswerById(answerId)
-                    return (
-                      <span
-                        key={answerId}
-                        className="px-3 py-1 text-sm bg-primary-100 text-primary-700 rounded-full"
-                      >
-                        {answer?.description || 'Unknown'}
-                      </span>
-                    )
-                  })}
+                  {question.answers.map(answer => (
+                    <span
+                      key={answer.id}
+                      className="px-3 py-1 text-sm bg-primary-100 text-primary-700 rounded-full"
+                    >
+                      {answer.description}
+                    </span>
+                  ))}
                 </div>
               </div>
             )}

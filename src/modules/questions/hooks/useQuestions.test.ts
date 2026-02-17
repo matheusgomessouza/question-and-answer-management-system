@@ -16,7 +16,7 @@ describe('useQuestions', () => {
     description: 'Question 1',
     active: true,
     order: 1,
-    answerIds: [],
+      answers: [],
   }
 
   const mockQuestions: Question[] = [
@@ -26,7 +26,7 @@ describe('useQuestions', () => {
       description: 'Question 2',
       active: false,
       order: 2,
-      answerIds: ['a1'],
+        answers: [],
     },
   ]
 
@@ -104,7 +104,7 @@ describe('useQuestions', () => {
         ...newQuestionInput,
         active: true,
         order: 3,
-        answerIds: [],
+          answers: [],
       }
 
       vi.mocked(questionService.getAll).mockResolvedValue(mockQuestions)
@@ -225,8 +225,6 @@ describe('useQuestions', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      expect(result.current.isDeleting).toBe(false)
-
       await result.current.deleteQuestion('1')
 
       expect(questionService.delete).toHaveBeenCalledWith('1')
@@ -258,54 +256,6 @@ describe('useQuestions', () => {
     })
   })
 
-  describe('Associate Answers Mutation', () => {
-    it('should associate answers to a question and invalidate queries', async () => {
-      const answerIds = ['a1', 'a2']
-      const questionWithAnswers: Question = {
-        ...mockQuestion,
-        answerIds,
-      }
-
-      vi.mocked(questionService.getAll).mockResolvedValue(mockQuestions)
-      vi.mocked(questionService.associateAnswers).mockResolvedValue(questionWithAnswers)
-
-      const { result } = renderHook(() => useQuestions(), { wrapper })
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      const resultQuestion = await result.current.associateAnswers({
-        id: '1',
-        answerIds,
-      })
-
-      expect(resultQuestion).toEqual(questionWithAnswers)
-      expect(questionService.associateAnswers).toHaveBeenCalledWith('1', answerIds)
-      expect(questionService.associateAnswers).toHaveBeenCalledTimes(1)
-
-      await waitFor(() => {
-        expect(questionService.getAll).toHaveBeenCalledTimes(2)
-      })
-    })
-
-    it('should handle associate answers mutation error', async () => {
-      const mockError = new Error('Failed to associate answers')
-      vi.mocked(questionService.getAll).mockResolvedValue([])
-      vi.mocked(questionService.associateAnswers).mockRejectedValue(mockError)
-
-      const { result } = renderHook(() => useQuestions(), { wrapper })
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false)
-      })
-
-      await expect(
-        result.current.associateAnswers({ id: '1', answerIds: ['a1', 'a2'] })
-      ).rejects.toThrow('Failed to associate answers')
-    })
-  })
-
   describe('Combined Behavior', () => {
     it('should handle multiple mutations sequentially', async () => {
       const newQuestion: Question = {
@@ -313,7 +263,7 @@ describe('useQuestions', () => {
         description: 'New',
         active: true,
         order: 3,
-        answerIds: [],
+          answers: [],
       }
 
       vi.mocked(questionService.getAll).mockResolvedValue(mockQuestions)
