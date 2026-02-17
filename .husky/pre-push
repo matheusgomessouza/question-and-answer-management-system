@@ -1,0 +1,7 @@
+echo "\n🔨 Building project..."
+npm run build || {
+  echo "❌ Build failed. Please fix the issues before committing."
+  exit 1
+}
+
+echo "\n✅ All pre-push checks passed!"
