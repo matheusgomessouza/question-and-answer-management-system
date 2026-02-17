@@ -25,9 +25,4 @@ export const questionService = {
   async delete(id: string): Promise<void> {
     await api.delete(`/questions/${id}`)
   },
-
-  async associateAnswers(id: string, answerIds: string[]): Promise<Question> {
-    const { data } = await api.post(`/questions/${id}/answers`, { answerIds })
-    return data.data
-  },
 }

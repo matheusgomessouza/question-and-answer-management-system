@@ -24,7 +24,7 @@ export function QuestionForm({ question, answers, onSubmit, onCancel }: Question
       description: question?.description || '',
       active: question?.active ?? true,
       order: question?.order ?? 0,
-      answerIds: question?.answerIds || [],
+      answerIds: question?.answers?.map(answer => answer.id) || [],
     },
   })
 
@@ -65,7 +65,7 @@ export function QuestionForm({ question, answers, onSubmit, onCancel }: Question
         <div className="border border-gray-300 rounded-lg p-4 max-h-64 overflow-y-auto space-y-2">
           {sortedAnswers.length === 0 ? (
             <p className="text-sm text-gray-500 text-center py-4">
-              No answers available. Create answers first.
+              Nao existem respostas cadastradas ainda.
             </p>
           ) : (
             sortedAnswers.map(answer => (

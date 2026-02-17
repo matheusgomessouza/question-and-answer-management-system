@@ -12,7 +12,7 @@ export interface Question {
   description: string
   active: boolean
   order: number
-  answerIds: UUID[]
+  answers: Answer[]
 }
 
 export interface CreateQuestionInput {

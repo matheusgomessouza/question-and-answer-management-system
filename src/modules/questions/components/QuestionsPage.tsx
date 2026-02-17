@@ -113,7 +113,6 @@ export function QuestionsPage() {
 
       <QuestionList
         questions={questions}
-        answers={answers}
         onEdit={handleEdit}
         onDelete={handleDelete}
         isDeleting={isDeleting}

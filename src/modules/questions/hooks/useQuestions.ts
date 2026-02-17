@@ -32,14 +32,6 @@ export function useQuestions() {
     },
   })
 
-  const associateMutation = useMutation({
-    mutationFn: ({ id, answerIds }: { id: string; answerIds: string[] }) =>
-      questionService.associateAnswers(id, answerIds),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['questions'] })
-    },
-  })
-
   return {
     questions,
     isLoading,
@@ -47,7 +39,6 @@ export function useQuestions() {
     createQuestion: createMutation.mutateAsync,
     updateQuestion: updateMutation.mutateAsync,
     deleteQuestion: deleteMutation.mutateAsync,
-    associateAnswers: associateMutation.mutateAsync,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
