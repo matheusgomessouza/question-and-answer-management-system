@@ -188,7 +188,7 @@ describe('AnswersPage', () => {
       render(<AnswersPage />)
 
       expect(screen.getByText(/Total Answers:/)).toBeInTheDocument()
-      expect(screen.getByText((content, element) => {
+      expect(screen.getByText((_, element) => {
         return element?.textContent === '2'
       })).toBeInTheDocument()
     })
@@ -202,7 +202,7 @@ describe('AnswersPage', () => {
       render(<AnswersPage />)
 
       expect(screen.getByText(/Total Answers:/)).toBeInTheDocument()
-      expect(screen.getByText((content, element) => {
+      expect(screen.getByText((_, element) => {
         return element?.textContent === '0'
       })).toBeInTheDocument()
     })
@@ -636,7 +636,7 @@ describe('AnswersPage', () => {
 
       render(<AnswersPage />)
 
-      expect(screen.getByText((content, element) => {
+      expect(screen.getByText((_, element) => {
         return element?.textContent === '25'
       })).toBeInTheDocument()
     })
