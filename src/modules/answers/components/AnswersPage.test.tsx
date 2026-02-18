@@ -12,6 +12,7 @@ interface AnswerFormProps {
   answer?: Answer
   onSubmit: (data: AnswerFormData) => Promise<void>
   onCancel: () => void
+  existingAnswers?: Array<Pick<Answer, 'id' | 'order'>>
 }
 
 interface AnswerListProps {
@@ -48,7 +49,15 @@ vi.mock('./AnswerForm', () => ({
   AnswerForm: ({ onSubmit, onCancel, answer }: AnswerFormProps) => (
     <div data-testid="answer-form">
       <div>{answer ? `Editing: ${answer.description}` : 'Creating new answer'}</div>
-      <button onClick={() => onSubmit({ description: 'Test Answer', active: true, order: 1 })}>
+      <button
+        onClick={async () => {
+          try {
+            await onSubmit({ description: 'Test Answer', active: true, order: 1 })
+          } catch {
+            // Ignore errors for testing purposes
+          }
+        }}
+      >
         Submit Form
       </button>
       <button onClick={onCancel}>Cancel Form</button>
@@ -300,7 +309,6 @@ describe('AnswersPage', () => {
 
     it('should handle creation errors gracefully', async () => {
       const user = userEvent.setup()
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const createAnswerMock = vi.fn().mockRejectedValue(new Error('Network error'))
       
       vi.mocked(useAnswers).mockReturnValue({
@@ -314,10 +322,7 @@ describe('AnswersPage', () => {
       await user.click(screen.getByText('Submit Form'))
 
       await waitFor(() => {
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-          'Failed to save answer:',
-          expect.any(Error)
-        )
+        expect(createAnswerMock).toHaveBeenCalledTimes(1)
       })
 
       // Modal should stay open on error
@@ -400,7 +405,6 @@ describe('AnswersPage', () => {
 
     it('should handle update errors gracefully', async () => {
       const user = userEvent.setup()
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const updateAnswerMock = vi.fn().mockRejectedValue(new Error('Update failed'))
       
       vi.mocked(useAnswers).mockReturnValue({
@@ -414,10 +418,7 @@ describe('AnswersPage', () => {
       await user.click(screen.getByText('Submit Form'))
 
       await waitFor(() => {
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-          'Failed to save answer:',
-          expect.any(Error)
-        )
+        expect(updateAnswerMock).toHaveBeenCalledTimes(1)
       })
 
       // Modal should stay open on error

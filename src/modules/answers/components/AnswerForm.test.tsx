@@ -325,5 +325,33 @@ describe('AnswerForm', () => {
         expect(descriptionInput).toHaveAttribute('aria-invalid', 'true')
       })
     })
+
+    it('should display error when order is already in use', async () => {
+      const user = userEvent.setup()
+      mockOnSubmit.mockResolvedValue(undefined)
+
+      render(
+        <AnswerForm
+          onSubmit={mockOnSubmit}
+          onCancel={mockOnCancel}
+          existingAnswers={[{ id: 'existing', order: 1 }]}
+        />
+      )
+
+      const descriptionInput = screen.getByPlaceholderText('Enter answer description')
+      const orderInput = screen.getByRole('spinbutton', { name: /order/i })
+      const createButton = screen.getByRole('button', { name: /create/i })
+
+      await user.type(descriptionInput, 'Valid description')
+      await user.clear(orderInput)
+      await user.type(orderInput, '1')
+      await user.click(createButton)
+
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toHaveTextContent('Order already in use')
+      })
+
+      expect(mockOnSubmit).not.toHaveBeenCalled()
+    })
   })
 })

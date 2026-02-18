@@ -15,6 +15,7 @@ interface QuestionFormProps {
   answers: Answer[]
   onSubmit: (data: QuestionFormData) => Promise<void>
   onCancel: () => void
+  existingQuestions?: Array<Pick<Question, 'id' | 'order'>>
 }
 
 interface QuestionListProps {
