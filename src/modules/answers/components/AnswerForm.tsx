@@ -16,6 +16,7 @@ interface AnswerFormProps {
 
 export function AnswerForm({ answer, onSubmit, onCancel, existingAnswers = [] }: AnswerFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const schema = useMemo(
     () =>
@@ -51,8 +52,12 @@ export function AnswerForm({ answer, onSubmit, onCancel, existingAnswers = [] }:
 
   const handleFormSubmit = async (data: AnswerFormData) => {
     setSubmitError(null)
+    setSuccessMessage(null)
     try {
       await onSubmit(data)
+      if (answer?.active === true && data.active === false) {
+        setSuccessMessage('Answer deactivated. Associated questions have been updated.')
+      }
     } catch (error) {
       const response = (error as { response?: { status?: number; data?: { message?: string } } })
         ?.response
@@ -78,6 +83,14 @@ export function AnswerForm({ answer, onSubmit, onCancel, existingAnswers = [] }:
           className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
         >
           {submitError}
+        </div>
+      )}
+      {successMessage && (
+        <div
+          role="status"
+          className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700"
+        >
+          {successMessage}
         </div>
       )}
       <Input

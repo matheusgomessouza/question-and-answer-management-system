@@ -20,8 +20,12 @@ export function useAnswers() {
   const updateMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: UpdateAnswerInput }) =>
       answerService.update(id, input),
-    onSuccess: () => {
+    onSuccess: (_data, { input }) => {
       queryClient.invalidateQueries({ queryKey: ['answers'] })
+
+      if (input.active === false) {
+        queryClient.invalidateQueries({ queryKey: ['questions'] })
+      }
     },
   })
 

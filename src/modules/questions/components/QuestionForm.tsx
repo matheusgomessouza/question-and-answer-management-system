@@ -39,8 +39,21 @@ export function QuestionForm({
             message: 'Order already in use',
           })
         }
+
+        const hasInactiveAnswers = data.answerIds.some(answerId => {
+          const answer = answers.find(a => a.id === answerId)
+          return answer && !answer.active
+        })
+
+        if (hasInactiveAnswers) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['answerIds'],
+            message: 'Cannot associate inactive answers with a question',
+          })
+        }
       }),
-    [existingQuestions, question?.id]
+    [existingQuestions, question?.id, answers]
   )
 
   const {
@@ -73,6 +86,14 @@ export function QuestionForm({
         setError('order', {
           type: 'server',
           message: message || 'Order already in use',
+        })
+        return
+      }
+
+      if (response?.status === 400) {
+        setError('answerIds', {
+          type: 'server',
+          message: message || 'Cannot associate inactive answers with a question',
         })
         return
       }
@@ -131,6 +152,7 @@ export function QuestionForm({
               <div key={answer.id} className="flex items-center space-x-2">
                 <input
                   type="checkbox"
+                  disabled={!answer.active}
                   id={`answer-${answer.id}`}
                   value={answer.id}
                   {...register('answerIds')}
@@ -138,7 +160,9 @@ export function QuestionForm({
                 />
                 <label
                   htmlFor={`answer-${answer.id}`}
-                  className="text-sm text-gray-700 cursor-pointer flex-1"
+                  className={`text-sm flex-1 ${
+                    !answer.active ? 'text-gray-500 cursor-not-allowed' : 'text-gray-700 cursor-pointer'
+                  }`}
                 >
                   {answer.description}
                   {!answer.active && (

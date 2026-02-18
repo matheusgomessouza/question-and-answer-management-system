@@ -100,4 +100,64 @@ describe('QuestionForm', () => {
 
     expect(mockOnSubmit).not.toHaveBeenCalled()
   })
+
+  it('disables inactive answer checkboxes', () => {
+    render(<QuestionForm answers={mockAnswers} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
+
+    const answer1Checkbox = screen.getByLabelText(/Answer 1/) as HTMLInputElement
+    const answer2Checkbox = screen.getByLabelText(/Answer 2/) as HTMLInputElement
+
+    expect(answer1Checkbox.disabled).toBe(false)
+    expect(answer2Checkbox.disabled).toBe(true)
+  })
+
+  it('prevents selecting inactive answers', async () => {
+    const user = userEvent.setup()
+    mockOnSubmit.mockResolvedValue(undefined)
+
+    render(<QuestionForm answers={mockAnswers} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
+
+    const descriptionInput = screen.getByPlaceholderText('Enter question description')
+    const answer2Checkbox = screen.getByLabelText(/Answer 2/)
+    const submitButton = screen.getByRole('button', { name: /create/i })
+
+    await user.type(descriptionInput, 'New Question')
+    // Try to click inactive answer - should not work due to disabled state
+    expect(answer2Checkbox).toBeDisabled()
+
+    // Submit with no answers selected
+    await user.click(submitButton)
+
+    // Should submit successfully with empty answerIds
+    await waitFor(() => {
+      expect(mockOnSubmit).toHaveBeenCalledTimes(1)
+    })
+
+    const [[submittedData]] = mockOnSubmit.mock.calls as [[QuestionFormData]]
+    expect(submittedData.answerIds).toEqual([])
+  })
+
+  it('shows error when trying to submit with inactive answers selected via server error', async () => {
+    const user = userEvent.setup()
+    mockOnSubmit.mockRejectedValue({
+      response: {
+        status: 400,
+        data: {
+          message: 'Cannot associate inactive answers with a question',
+        },
+      },
+    })
+
+    render(<QuestionForm answers={mockAnswers} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
+
+    const descriptionInput = screen.getByPlaceholderText('Enter question description')
+    const submitButton = screen.getByRole('button', { name: /create/i })
+
+    await user.type(descriptionInput, 'New Question')
+    await user.click(submitButton)
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Cannot associate inactive answers with a question')
+    })
+  })
 })
