@@ -1,5 +1,7 @@
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { Question } from '../types'
 import { Answer } from '../../answers/types'
 import { questionFormSchema, QuestionFormData } from '../validators/questionSchema'
@@ -11,15 +13,43 @@ interface QuestionFormProps {
   answers: Answer[]
   onSubmit: (data: QuestionFormData) => Promise<void>
   onCancel: () => void
+  existingQuestions?: Array<Pick<Question, 'id' | 'order'>>
 }
 
-export function QuestionForm({ question, answers, onSubmit, onCancel }: QuestionFormProps) {
+export function QuestionForm({
+  question,
+  answers,
+  onSubmit,
+  onCancel,
+  existingQuestions = [],
+}: QuestionFormProps) {
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  const schema = useMemo(
+    () =>
+      questionFormSchema.superRefine((data, ctx) => {
+        const hasDuplicateOrder = existingQuestions.some(
+          existing => existing.order === data.order && existing.id !== question?.id
+        )
+
+        if (hasDuplicateOrder) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['order'],
+            message: 'Order already in use',
+          })
+        }
+      }),
+    [existingQuestions, question?.id]
+  )
+
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<QuestionFormData>({
-    resolver: zodResolver(questionFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       description: question?.description || '',
       active: question?.active ?? true,
@@ -30,8 +60,37 @@ export function QuestionForm({ question, answers, onSubmit, onCancel }: Question
 
   const sortedAnswers = [...answers].sort((a, b) => a.order - b.order)
 
+  const handleFormSubmit = async (data: QuestionFormData) => {
+    setSubmitError(null)
+    try {
+      await onSubmit(data)
+    } catch (error) {
+      const response = (error as { response?: { status?: number; data?: { message?: string } } })
+        ?.response
+      const message = response?.data?.message
+
+      if (response?.status === 409) {
+        setError('order', {
+          type: 'server',
+          message: message || 'Order already in use',
+        })
+        return
+      }
+
+      setSubmitError(message || 'Failed to save question. Please try again.')
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+      {submitError && (
+        <div
+          role="alert"
+          className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+          {submitError}
+        </div>
+      )}
       <Input
         label="Description"
         {...register('description')}

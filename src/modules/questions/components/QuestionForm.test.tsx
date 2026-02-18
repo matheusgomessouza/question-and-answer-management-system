@@ -30,7 +30,7 @@ describe('QuestionForm', () => {
   it('renders empty state when no answers exist', () => {
     render(<QuestionForm answers={[]} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
 
-    expect(screen.getByText('Nao existem respostas cadastradas ainda.')).toBeInTheDocument()
+    expect(screen.getByText('No answers available yet.')).toBeInTheDocument()
   })
 
   it('preselects answers when editing a question', () => {
@@ -70,5 +70,34 @@ describe('QuestionForm', () => {
 
     const [[submittedData]] = mockOnSubmit.mock.calls as [[QuestionFormData]]
     expect(submittedData.answerIds).toEqual(['1'])
+  })
+
+  it('shows error when order already exists', async () => {
+    const user = userEvent.setup()
+    mockOnSubmit.mockResolvedValue(undefined)
+
+    render(
+      <QuestionForm
+        answers={mockAnswers}
+        existingQuestions={[{ id: 'existing', order: 1 }]}
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    )
+
+    const descriptionInput = screen.getByPlaceholderText('Enter question description')
+    const orderInput = screen.getByRole('spinbutton', { name: /order/i })
+    const submitButton = screen.getByRole('button', { name: /create/i })
+
+    await user.type(descriptionInput, 'New Question')
+    await user.clear(orderInput)
+    await user.type(orderInput, '1')
+    await user.click(submitButton)
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Order already in use')
+    })
+
+    expect(mockOnSubmit).not.toHaveBeenCalled()
   })
 })

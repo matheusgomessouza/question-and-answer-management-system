@@ -27,17 +27,13 @@ export function QuestionsPage() {
   }
 
   const handleSubmit = async (data: QuestionFormData) => {
-    try {
-      if (editingQuestion) {
-        await updateQuestion({ id: editingQuestion.id, input: data })
-      } else {
-        await createQuestion(data)
-      }
-      setIsModalOpen(false)
-      setEditingQuestion(null)
-    } catch (error) {
-      console.error('Failed to save question:', error)
+    if (editingQuestion) {
+      await updateQuestion({ id: editingQuestion.id, input: data })
+    } else {
+      await createQuestion(data)
     }
+    setIsModalOpen(false)
+    setEditingQuestion(null)
   }
 
   const handleDelete = async (id: string) => {
@@ -126,6 +122,7 @@ export function QuestionsPage() {
         <QuestionForm
           question={editingQuestion || undefined}
           answers={answers}
+          existingQuestions={questions}
           onSubmit={handleSubmit}
           onCancel={handleCloseModal}
         />

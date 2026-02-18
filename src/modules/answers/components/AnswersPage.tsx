@@ -25,17 +25,13 @@ export function AnswersPage() {
   }
 
   const handleSubmit = async (data: AnswerFormData) => {
-    try {
-      if (editingAnswer) {
-        await updateAnswer({ id: editingAnswer.id, input: data })
-      } else {
-        await createAnswer(data)
-      }
-      setIsModalOpen(false)
-      setEditingAnswer(null)
-    } catch (error) {
-      console.error('Failed to save answer:', error)
+    if (editingAnswer) {
+      await updateAnswer({ id: editingAnswer.id, input: data })
+    } else {
+      await createAnswer(data)
     }
+    setIsModalOpen(false)
+    setEditingAnswer(null)
   }
 
   const handleDelete = async (id: string) => {
@@ -100,7 +96,12 @@ export function AnswersPage() {
         onClose={handleCloseModal}
         title={editingAnswer ? 'Edit Answer' : 'Create New Answer'}
       >
-        <AnswerForm answer={editingAnswer || undefined} onSubmit={handleSubmit} onCancel={handleCloseModal} />
+        <AnswerForm
+          answer={editingAnswer || undefined}
+          existingAnswers={answers}
+          onSubmit={handleSubmit}
+          onCancel={handleCloseModal}
+        />
       </Modal>
     </div>
   )
