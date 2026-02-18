@@ -529,5 +529,55 @@ describe('useAnswers', () => {
         order: 0,
       })
     })
+
+    it('should invalidate questions cache when answer is deactivated', async () => {
+      vi.mocked(answerService.getAll).mockResolvedValue(mockAnswers)
+      const deactivatedAnswer: Answer = { ...mockAnswer, active: false }
+      vi.mocked(answerService.update).mockResolvedValue(deactivatedAnswer)
+
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      const { result } = renderHook(() => useAnswers(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      const input: UpdateAnswerInput = {
+        active: false,
+      }
+
+      await result.current.updateAnswer({ id: '1', input })
+
+      await waitFor(() => {
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['answers'] })
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['questions'] })
+      })
+    })
+
+    it('should not invalidate questions cache when answer is updated without deactivation', async () => {
+      vi.mocked(answerService.getAll).mockResolvedValue(mockAnswers)
+      const updatedAnswer: Answer = { ...mockAnswer, description: 'Updated description' }
+      vi.mocked(answerService.update).mockResolvedValue(updatedAnswer)
+
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      const { result } = renderHook(() => useAnswers(), { wrapper })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      const input: UpdateAnswerInput = {
+        description: 'Updated description',
+      }
+
+      await result.current.updateAnswer({ id: '1', input })
+
+      await waitFor(() => {
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['answers'] })
+        expect(invalidateSpy).not.toHaveBeenCalledWith({ queryKey: ['questions'] })
+      })
+    })
   })
 })

@@ -353,5 +353,61 @@ describe('AnswerForm', () => {
 
       expect(mockOnSubmit).not.toHaveBeenCalled()
     })
+
+    it('should show success message when answer is deactivated', async () => {
+      const user = userEvent.setup()
+      mockOnSubmit.mockResolvedValue(undefined)
+
+      const activeAnswer: Answer = {
+        id: '1',
+        description: 'Active answer',
+        active: true,
+        order: 1,
+      }
+
+      render(<AnswerForm answer={activeAnswer} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
+
+      const activeCheckbox = screen.getByRole('checkbox', { name: /active/i })
+      const updateButton = screen.getByRole('button', { name: /update/i })
+
+      await user.click(activeCheckbox)
+      await user.click(updateButton)
+
+      await waitFor(() => {
+        expect(screen.getByRole('status')).toHaveTextContent(
+          'Answer deactivated. Associated questions have been updated.'
+        )
+      })
+
+      expect(mockOnSubmit).toHaveBeenCalledTimes(1)
+    })
+
+    it('should not show success message when answer is updated without deactivation', async () => {
+      const user = userEvent.setup()
+      mockOnSubmit.mockResolvedValue(undefined)
+
+      const activeAnswer: Answer = {
+        id: '1',
+        description: 'Active answer',
+        active: true,
+        order: 1,
+      }
+
+      render(<AnswerForm answer={activeAnswer} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
+
+      const descriptionInput = screen.getByPlaceholderText('Enter answer description')
+      const updateButton = screen.getByRole('button', { name: /update/i })
+
+      await user.clear(descriptionInput)
+      await user.type(descriptionInput, 'Updated description')
+      await user.click(updateButton)
+
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalledTimes(1)
+      })
+
+      // Should not show success message
+      expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    })
   })
 })
