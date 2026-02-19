@@ -6,14 +6,13 @@ import { useQuestions } from '../hooks/useQuestions'
 import { useAnswers } from '../../answers/hooks/useAnswers'
 import { Question } from '../types'
 import { Answer } from '../../answers/types'
-import { QuestionFormData } from '../validators/questionSchema'
 import { CreateQuestionInput, UpdateQuestionInput } from '../types'
 import { CreateAnswerInput, UpdateAnswerInput } from '../../answers/types'
 
 interface QuestionFormProps {
   question?: Question
   answers: Answer[]
-  onSubmit: (data: QuestionFormData) => Promise<void>
+  onSubmit: (data: CreateQuestionInput | UpdateQuestionInput) => Promise<void>
   onCancel: () => void
   existingQuestions?: Array<Pick<Question, 'id' | 'order'>>
 }

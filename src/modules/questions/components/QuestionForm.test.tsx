@@ -23,6 +23,14 @@ describe('QuestionForm', () => {
   const mockOnSubmit = vi.fn()
   const mockOnCancel = vi.fn()
 
+  const mockInactiveQuestion: Question = {
+    id: 'q2',
+    description: 'Inactive Question',
+    active: false,
+    order: 2,
+    answers: [mockAnswers[0]],
+  }
+
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -159,5 +167,68 @@ describe('QuestionForm', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Cannot associate inactive answers with a question')
     })
+  })
+
+  it('disables description, order and answer associations when editing inactive question', () => {
+    render(
+      <QuestionForm
+        question={mockInactiveQuestion}
+        answers={mockAnswers}
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    )
+
+    expect(screen.getByText(/This question is inactive/)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Enter question description')).toBeDisabled()
+    expect(screen.getByRole('spinbutton', { name: /order/i })).toBeDisabled()
+    expect(screen.getByLabelText(/Answer 1/)).toBeDisabled()
+  })
+
+  it('submits activation-only payload when editing inactive question', async () => {
+    const user = userEvent.setup()
+    mockOnSubmit.mockResolvedValue(undefined)
+
+    render(
+      <QuestionForm
+        question={mockInactiveQuestion}
+        answers={mockAnswers}
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    )
+
+    await user.click(screen.getByLabelText('Active'))
+    const submitButton = screen.getByRole('button', { name: /activate/i })
+    await user.click(submitButton)
+
+    await waitFor(() => {
+      expect(mockOnSubmit).toHaveBeenCalledTimes(1)
+    })
+
+    const [[submittedData]] = mockOnSubmit.mock.calls as [[{ active: boolean }]]
+    expect(submittedData).toEqual({ active: true })
+  })
+
+  it('shows active error if user tries to submit inactive question without activating', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <QuestionForm
+        question={mockInactiveQuestion}
+        answers={mockAnswers}
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    )
+
+    const submitButton = screen.getByRole('button', { name: /activate to continue/i })
+    await user.click(submitButton)
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Activate this question to continue')
+    })
+
+    expect(mockOnSubmit).not.toHaveBeenCalled()
   })
 })
