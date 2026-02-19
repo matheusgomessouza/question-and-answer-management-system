@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Question } from '../types'
+import { CreateQuestionInput, Question, UpdateQuestionInput } from '../types'
 import { Answer } from '../../answers/types'
 import { questionFormSchema, QuestionFormData } from '../validators/questionSchema'
 import { Button } from '@/shared/components/Button'
@@ -11,7 +11,7 @@ import { Input } from '@/shared/components/Input'
 interface QuestionFormProps {
   question?: Question
   answers: Answer[]
-  onSubmit: (data: QuestionFormData) => Promise<void>
+  onSubmit: (data: CreateQuestionInput | UpdateQuestionInput) => Promise<void>
   onCancel: () => void
   existingQuestions?: Array<Pick<Question, 'id' | 'order'>>
 }
@@ -24,6 +24,7 @@ export function QuestionForm({
   existingQuestions = [],
 }: QuestionFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const isEditingInactiveQuestion = !!question && !question.active
 
   const schema = useMemo(
     () =>
@@ -52,14 +53,45 @@ export function QuestionForm({
             message: 'Cannot associate inactive answers with a question',
           })
         }
+
+        if (isEditingInactiveQuestion) {
+          const selectedAnswerIds = [...data.answerIds].sort()
+          const currentAnswerIds = [...(question?.answers?.map(answer => answer.id) || [])].sort()
+          const answersWereChanged = JSON.stringify(selectedAnswerIds) !== JSON.stringify(currentAnswerIds)
+
+          if (data.description !== question?.description) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['description'],
+              message: 'Inactive questions can only be activated first',
+            })
+          }
+
+          if (data.order !== question?.order) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['order'],
+              message: 'Inactive questions can only be activated first',
+            })
+          }
+
+          if (answersWereChanged) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['answerIds'],
+              message: 'Inactive questions can only be activated first',
+            })
+          }
+        }
       }),
-    [existingQuestions, question?.id, answers]
+    [existingQuestions, question, answers, isEditingInactiveQuestion]
   )
 
   const {
     register,
     handleSubmit,
     setError,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<QuestionFormData>({
     resolver: zodResolver(schema),
@@ -72,10 +104,24 @@ export function QuestionForm({
   })
 
   const sortedAnswers = [...answers].sort((a, b) => a.order - b.order)
+  const isActive = watch('active')
 
   const handleFormSubmit = async (data: QuestionFormData) => {
     setSubmitError(null)
     try {
+      if (isEditingInactiveQuestion) {
+        if (!data.active) {
+          setError('active', {
+            type: 'manual',
+            message: 'Activate this question to continue',
+          })
+          return
+        }
+
+        await onSubmit({ active: true })
+        return
+      }
+
       await onSubmit(data)
     } catch (error) {
       const response = (error as { response?: { status?: number; data?: { message?: string } } })
@@ -91,10 +137,14 @@ export function QuestionForm({
       }
 
       if (response?.status === 400) {
-        setError('answerIds', {
-          type: 'server',
-          message: message || 'Cannot associate inactive answers with a question',
-        })
+        if (message?.includes('Inactive questions can only be activated')) {
+          setSubmitError(message)
+        } else {
+          setError('answerIds', {
+            type: 'server',
+            message: message || 'Cannot associate inactive answers with a question',
+          })
+        }
         return
       }
 
@@ -112,11 +162,22 @@ export function QuestionForm({
           {submitError}
         </div>
       )}
+
+      {isEditingInactiveQuestion && (
+        <div
+          role="status"
+          className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+        >
+          This question is inactive. First activate and save it. You can edit description, order, and answers after activation.
+        </div>
+      )}
+
       <Input
         label="Description"
         {...register('description')}
         error={errors.description?.message}
         placeholder="Enter question description"
+        disabled={isEditingInactiveQuestion}
         autoFocus
       />
 
@@ -131,12 +192,18 @@ export function QuestionForm({
           Active
         </label>
       </div>
+      {errors.active && (
+        <p className="text-sm text-red-600" role="alert">
+          {errors.active.message}
+        </p>
+      )}
 
       <Input
         label="Order"
         type="number"
         {...register('order', { valueAsNumber: true })}
         error={errors.order?.message}
+        disabled={isEditingInactiveQuestion}
         min="0"
       />
 
@@ -152,7 +219,7 @@ export function QuestionForm({
               <div key={answer.id} className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  disabled={!answer.active}
+                  disabled={isEditingInactiveQuestion || !answer.active}
                   id={`answer-${answer.id}`}
                   value={answer.id}
                   {...register('answerIds')}
@@ -185,7 +252,7 @@ export function QuestionForm({
           Cancel
         </Button>
         <Button type="submit" variant="primary" isLoading={isSubmitting}>
-          {question ? 'Update' : 'Create'}
+          {isEditingInactiveQuestion ? (isActive ? 'Activate' : 'Activate to Continue') : question ? 'Update' : 'Create'}
         </Button>
       </div>
     </form>

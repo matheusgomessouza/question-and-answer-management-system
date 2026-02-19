@@ -8,7 +8,7 @@ import { Modal } from '@/shared/components/Modal'
 import { Button } from '@/shared/components/Button'
 import { Spinner } from '@/shared/components/Spinner'
 import { Card } from '@/shared/components/Card'
-import { QuestionFormData } from '../validators/questionSchema'
+import { CreateQuestionInput, UpdateQuestionInput } from '../types'
 
 export function QuestionsPage() {
   const { questions, isLoading: questionsLoading, createQuestion, updateQuestion, deleteQuestion, isDeleting } = useQuestions()
@@ -26,11 +26,11 @@ export function QuestionsPage() {
     setIsModalOpen(true)
   }
 
-  const handleSubmit = async (data: QuestionFormData) => {
+  const handleSubmit = async (data: CreateQuestionInput | UpdateQuestionInput) => {
     if (editingQuestion) {
       await updateQuestion({ id: editingQuestion.id, input: data })
     } else {
-      await createQuestion(data)
+      await createQuestion(data as CreateQuestionInput)
     }
     setIsModalOpen(false)
     setEditingQuestion(null)
