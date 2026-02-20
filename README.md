@@ -1,6 +1,7 @@
 # Q&A Management System
 
-Sistema de gerenciamento de perguntas e respostas construído com **React 18 + TypeScript + Vite** (frontend)
+Sistema de gerenciamento de perguntas e respostas construído com **React 18 + TypeScript + Vite** (frontend) <br/>
+**APRESENTAÇÃO:** https://full-stack-qa-platform-t-i6bnqh5.gamma.site/
 
 ![](./public/qams-dashboard.jpg)
 
